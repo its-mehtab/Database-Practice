@@ -1,5 +1,34 @@
 import express from "express";
 import bodyParser from "body-parser";
+import pg from "pg";
+import dotenv from "dotenv";
+dotenv.config();
+
+let quiz = [
+  { country: "France", capital: "Paris" },
+  { country: "United Kingdom", capital: "London" },
+  { country: "United States of America", capital: "New York" },
+];
+
+const db = new pg.Client({
+  user: "postgres",
+  host: "localhost",
+  database: "world",
+  password: process.env.DATABASE_PASSWORD,
+  port: 5432,
+});
+
+await db.connect();
+
+try {
+  const res = await db.query("SELECT * FROM capitals");
+  // console.log(res.rows);
+  quiz = res.rows;
+} catch (err) {
+  console.error(err);
+} finally {
+  await db.end();
+}
 
 const app = express();
 const port = 4000;
@@ -8,12 +37,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 let totalCorrect = 0;
-
-let quiz = [
-  { country: "France", capital: "Paris" },
-  { country: "United Kingdom", capital: "London" },
-  { country: "United States of America", capital: "New York" },
-];
 
 let currentQuestion = {};
 
