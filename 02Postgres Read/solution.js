@@ -1,12 +1,16 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
+import dotenv from "dotenv";
+dotenv.config();
+
+console.log(process.env.DATABASE_PASSWORD);
 
 const db = new pg.Client({
   user: "postgres",
   host: "localhost",
   database: "world",
-  password: "123456",
+  password: process.env.DATABASE_PASSWORD,
   port: 5432,
 });
 
@@ -62,7 +66,7 @@ app.post("/submit", (req, res) => {
 async function nextQuestion() {
   const randomCountry = quiz[Math.floor(Math.random() * quiz.length)];
 
-  currentQuestion = randomCountry;
+  return (currentQuestion = randomCountry);
 }
 
 app.listen(port, () => {

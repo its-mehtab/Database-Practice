@@ -1,10 +1,25 @@
 import express from "express";
 import bodyParser from "body-parser";
+import db from "db";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = 4000;
 
 let totalCorrect = 0;
+
+let quiz = [];
+
+const db = new pg.client({
+  user: "postgres",
+  host: "localhost",
+  database: "world",
+  password: process.env.DATABASE_PASSWORD,
+  port: "5432",
+});
+
+await db.connect();
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -40,7 +55,7 @@ app.post("/submit", (req, res) => {
 
 function nextQuestion() {
   const randomCountry = quiz[Math.floor(Math.random() * quiz.length)];
-  currentQuestion = randomCountry;
+  return (currentQuestion = randomCountry);
 }
 
 app.listen(port, () => {
