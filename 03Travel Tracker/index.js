@@ -4,8 +4,6 @@ import pg from "pg";
 import dotenv from "dotenv";
 dotenv.config();
 
-console.log(process.env.DATABASE_PASSWORD);
-
 const db = new pg.Client({
   host: "localhost",
   port: 5432,
@@ -14,7 +12,22 @@ const db = new pg.Client({
   password: process.env.DATABASE_PASSWORD,
 });
 
-db.connect;
+let visitedCountries = [];
+
+db.connect();
+
+try {
+  const res = await db.query("SELECT country_code from visited_countries");
+
+  res.rows.forEach((currCountry) => {
+    visitedCountries.push(currCountry.country_code);
+  });
+  console.log(visitedCountries);
+} catch (err) {
+  console.error(err);
+} finally {
+  db.end();
+}
 
 const app = express();
 const port = 4000;
@@ -23,7 +36,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", async (req, res) => {
-  //Write your code here.
+  res.render("index.ejs", {
+    countries: visitedCountries,
+    total: visitedCountries.length,
+  });
 });
 
 app.listen(port, () => {
