@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = 4000;
 
 const db = new pg.Client({
   user: "postgres",
@@ -32,6 +32,8 @@ async function checkVisisted() {
   result.rows.forEach((country) => {
     countries.push(country.country_code);
   });
+  console.log(countries);
+
   return countries;
 }
 app.get("/", async (req, res) => {
