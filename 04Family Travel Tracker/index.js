@@ -39,21 +39,30 @@ async function checkVisisted() {
 
   return countries;
 }
-app.get("/", async (req, res) => {
-  try {
-    const res = await db.query("SELECT * FROM users");
-    console.log(res.rows);
+async function getCurrentUser() {
+  const res = await db.query("SELECT * FROM users");
+  users = res.rows;
 
-    users = res.rows;
-  } catch (err) {
-    console.log(err);
-  }
+  return users.find((user) => user.id == currentUserId);
+}
+app.get("/", async (req, res) => {
+  // try {
+  //   const res = await db.query("SELECT * FROM users");
+  //   console.log(res.rows);
+
+  //   users = res.rows;
+  // } catch (err) {
+  //   console.log(err);
+  // }
+  const currentUser = await getCurrentUser();
+  console.log(currentUser);
+
   const countries = await checkVisisted();
   res.render("index.ejs", {
     countries: countries,
     total: countries.length,
     users: users,
-    color: "teal",
+    color: currentUser.color,
   });
 });
 app.post("/add", async (req, res) => {
@@ -61,7 +70,7 @@ app.post("/add", async (req, res) => {
 
   try {
     const result = await db.query(
-      "SELECT country_code FROM countries WHERE LOWER(country_name) LIKE '%' || $1 || '%';",
+      "SELECT country_code FROM countries WHERE LOWER(country_name) = $1",
       [input.toLowerCase()]
     );
 
@@ -81,15 +90,41 @@ app.post("/add", async (req, res) => {
   }
 });
 app.post("/user", async (req, res) => {
-  const input = req.body["user"];
-  currentUserId = input;
+  const inputUser = req.body["user"];
+  const inputAdd = req.body["add"];
 
-  res.redirect("/");
+  if (inputUser) {
+    currentUserId = inputUser;
+    res.redirect("/");
+  } else if (inputAdd) {
+    res.render("new.ejs");
+  }
 });
 
 app.post("/new", async (req, res) => {
   //Hint: The RETURNING keyword can return the data that was inserted.
   //https://www.postgresql.org/docs/current/dml-returning.html
+
+  const newMemberName = req.body["name"];
+  const newMemberColor = req.body["color"];
+
+  try {
+    const res = await db.query(
+      "INSERT INTO users (name, color) VALUES ($1, $2) RETURNING *",
+      [
+        newMemberName.slice(0, 1).toUpperCase() +
+          newMemberName.slice(1).toLowerCase(),
+        newMemberColor,
+      ]
+    );
+
+    const id = res.rows[0].id;
+    currentUserId = id;
+  } catch (err) {
+    console.log(err);
+  }
+
+  res.redirect("/");
 });
 
 app.listen(port, () => {
